@@ -1,0 +1,28 @@
+name: lp-pedidos-dev-pipeline
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  build-scan-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Maven Full Build
+        run: mvn clean package -DskipTests -B
+      - name: SonarQube Scan
+        run: mvn sonar:sonar -Dsonar.projectKey=lp-pedidos -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+      # TODO: Implementar escaneo de imagenes con Aqua o Trivy antes del push
+      - name: Docker Build
+        run: docker build -t jfrog.liverpool.com.mx/lp-pedidos/app:dev-${{ github.sha }} .
+      - name: Docker Push to JFrog
+        run: |
+          echo "${{ secrets.JFROG_TOKEN }}" | docker login jfrog.liverpool.com.mx -u ${{ secrets.JFROG_USER }} --password-stdin
+          docker push jfrog.liverpool.com.mx/lp-pedidos/app:dev-${{ github.sha }}

@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lp-pedidos-app
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=local
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/lppedidos
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=liverpool_dev
+    networks:
+      - lp-pedidos-net
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15-alpine
+    container_name: lp-pedidos-db
+    environment:
+      - POSTGRES_DB=lppedidos
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=liverpool_dev
+    ports:
+      - "5432:5432"
+    networks:
+      - lp-pedidos-net
+
+networks:
+  lp-pedidos-net:
+    driver: bridge
+    name: lp-pedidos-net

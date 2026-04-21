@@ -1,53 +1,61 @@
+# --- AWS ECS Cluster ---
 resource "aws_ecs_cluster" "main" {
-  name = "lp-pedidos-cluster-${var.environment}"
+  name = "lp-pedidos-cluster"
 
   setting {
     name  = "containerInsights"
-    value = "enabled"
+    value = "enabled" # Habilitado para mejor visibilidad en CloudWatch
   }
 }
 
-resource "aws_ecs_task_definition" "app" {
-  family                   = "lp-pedidos-task-${var.environment}"
-  network_mode             = "awsvpc"
-  requires_compatibilities = ["FARGATE"]
-  cpu                      = var.ecs_task_cpu
-  memory                   = var.ecs_task_memory
-  
-  # Fix: Se requerirá inyectar un rol IAM gestionado por el módulo de seguridad
-  # execution_role_arn       = data.aws_iam_role.ecs_exec.arn
-
-  container_definitions = jsonencode([
-    {
-      name      = "lp-pedidos-container-${var.environment}"
-      image     = var.app_image
-      essential = true
-      portMappings = [
-        {
-          containerPort = 8080
-          protocol      = "tcp"
-        }
-      ]
-      # TODO: Implementar rotación de secretos en AWS Secrets Manager para credenciales DB
-      environment = [
-        { name = "SPRING_PROFILES_ACTIVE", value = var.environment }
-      ]
-    }
-  ])
-}
-
-resource "aws_ecs_service" "app_service" {
-  name            = "lp-pedidos-service-${var.environment}"
+# --- ECS Service con Fargate ---
+resource "aws_ecs_service" "app" {
+  name            = "lp-pedidos-service"
   cluster         = aws_ecs_cluster.main.id
   task_definition = aws_ecs_task_definition.app.arn
-  desired_count   = var.environment == "prod" ? 3 : 1
+  desired_count   = 2 # Iniciamos con 2 tareas para Alta Disponibilidad (High Availability)
   launch_type     = "FARGATE"
 
   network_configuration {
-    # Fix: Reemplazadas subnets hardcodeadas por los recursos de la VPC aprovisionada
-    subnets          = aws_subnet.private[*].id
-    # TODO: Reemplazar el SG hardcodeado por un recurso aws_security_group dinámico
-    security_groups  = ["sg-zzzzzzzz"]
+    subnets          = var.private_subnets
+    security_groups  = [aws_security_group.ecs_tasks.id]
     assign_public_ip = false
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.app.arn
+    container_name   = "app-pedidos"
+    container_port   = 8080
+  }
+}
+
+# --- ESTRATEGIA DE ESCALAMIENTO (Resiliencia) ---
+
+# 1. Definir el objetivo de escalado
+resource "aws_appautoscaling_target" "ecs_target" {
+  max_capacity       = 5
+  min_capacity       = 2
+  resource_id        = "service/${aws_ecs_cluster.main.name}/${aws_ecs_service.app.name}"
+  scalable_dimension = "ecs:service:DesiredCount"
+  service_namespace  = "ecs"
+}
+
+# 2. Política de escalamiento basada en CPU
+resource "aws_appautoscaling_policy" "ecs_policy_cpu" {
+  name               = "lp-pedidos-cpu-autoscaling"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.ecs_target.resource_id
+  scalable_dimension = aws_appautoscaling_target.ecs_target.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.ecs_target.service_namespace
+
+  target_tracking_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ECSServiceAverageCPUUtilization"
+    }
+    # Se elige 70% como umbral para permitir un margen de maniobra 
+    # mientras se levantan nuevas instancias sin degradar la experiencia del usuario
+    target_value = 70.0 
+    scale_in_cooldown  = 300
+    scale_out_cooldown = 60
   }
 }

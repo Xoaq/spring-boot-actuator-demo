@@ -23,7 +23,7 @@ jobs:
         run: ./mvnw clean package -DskipTests -B
       - name: SonarQube Scan & Quality Gate
         run: ./mvnw sonar:sonar -Dsonar.projectKey=lp-pedidos -Dsonar.login=${{ secrets.SONAR_TOKEN }} -Dsonar.qualitygate.wait=true
-      # TODO: Implementar escaneo de imagenes con Aqua o Trivy antes del push
+
       - name: Docker Build
         run: docker build -t jfrog.liverpool.com.mx/lp-pedidos/app:dev-${{ github.sha }} .
       - name: Docker Push to JFrog

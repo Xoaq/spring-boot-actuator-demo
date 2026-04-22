@@ -1,36 +1,47 @@
-version: '3.8'
-
 services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+  # --- Aplicación Spring Boot ---
+  app-pedidos:
+    build: 
+      context: ..
+      dockerfile: deploy/Dockerfile 
     container_name: lp-pedidos-app
     ports:
       - "8080:8080"
     environment:
-      - SPRING_PROFILES_ACTIVE=local
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/lppedidos
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=liverpool_dev
+      - SPRING_PROFILES_ACTIVE=dev
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=prometheus,health,info
     networks:
-      - lp-pedidos-net
-    depends_on:
-      - db
+      - liverpool-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  db:
-    image: postgres:15-alpine
-    container_name: lp-pedidos-db
-    environment:
-      - POSTGRES_DB=lppedidos
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=liverpool_dev
+  # --- Prometheus (Recolección de métricas) ---
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: lp-prometheus
+    volumes:
+      - ../src/main/resources/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
-      - "5432:5432"
+      - "9091:9090"
     networks:
-      - lp-pedidos-net
+      - liverpool-net
+
+  # --- Grafana (Visualización) ---
+  grafana:
+    image: grafana/grafana:latest
+    container_name: lp-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin # Solo para fines de la demo técnica
+    networks:
+      - liverpool-net
+    depends_on:
+      - prometheus
 
 networks:
-  lp-pedidos-net:
+  liverpool-net:
     driver: bridge
-    name: lp-pedidos-net

@@ -15,7 +15,7 @@ RUN ./mvnw clean package -DskipTests
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
-COPY --from=builder /app/target/lp-pedidos-*.jar app.jar
+COPY --from=builder /app/target/actuator-demo-*.jar app.jar
 
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]

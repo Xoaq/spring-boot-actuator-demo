@@ -32,11 +32,8 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           ./mvnw verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-          -Dsonar.host.url=https://sonarcloud.io \
-          -Dsonar.organization=xoaq \
-          -Dsonar.projectKey=Xoaq_spring-boot-actuator-demo \
           -Dsonar.qualitygate.wait=true \
-          -T 1C
+          -T 1C -X
 
       - name: Maven Build & Unit Tests
         # Si el análisis de Sonar falla por el Quality Gate, este paso no se ejecutará

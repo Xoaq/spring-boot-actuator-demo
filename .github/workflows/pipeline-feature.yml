@@ -30,6 +30,7 @@ jobs:
           -Dsonar.projectKey=Xoaq_spring-boot-actuator-demo \
           -Dsonar.organization=xoaq \
           -Dsonar.host.url=https://sonarcloud.io \
+          -Dsonar.token=$SONAR_TOKEN \
           -Dsonar.qualitygate.wait=true \
           -T 1C
 

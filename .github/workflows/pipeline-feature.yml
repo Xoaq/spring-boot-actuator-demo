@@ -28,7 +28,7 @@ jobs:
         run: |
           mvn verify sonar:sonar \
           -Dsonar.projectKey=spring-boot-actuator-demo \
-          -Dsonar.organization=Xoaq \
+          -Dsonar.organization=xoaq \
           -Dsonar.host.url=https://sonarcloud.io \
           -Dsonar.token=$SONAR_TOKEN \
           -Dsonar.qualitygate.wait=true \

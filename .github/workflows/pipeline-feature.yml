@@ -20,17 +20,19 @@ jobs:
           distribution: 'temurin'
           cache: 'maven' # Agregamos cache para que sea más rápido tras la primera corrida
 
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
       - name: Static Code Analysis (SonarQube)
-       
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-    
         run: |
-          mvn verify sonar:sonar \
-          -Dsonar.projectKey=Xoaq_spring-boot-actuator-demo \
-          -Dsonar.organization=xoaq \
+          ./mvnw verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
           -Dsonar.host.url=https://sonarcloud.io \
-          -Dsonar.token=$SONAR_TOKEN \
           -Dsonar.qualitygate.wait=true \
           -T 1C
 

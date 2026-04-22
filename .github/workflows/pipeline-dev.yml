@@ -15,14 +15,23 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
       - name: Ensure Maven Wrapper is executable
         run: chmod +x mvnw
       - name: Checkstyle Validation
         run: ./mvnw checkstyle:check -B
-      - name: Maven Full Build
-        run: ./mvnw clean package -DskipTests -B
-      - name: SonarQube Scan & Quality Gate
-        run: ./mvnw sonar:sonar -Dsonar.projectKey=lp-pedidos -Dsonar.login=${{ secrets.SONAR_TOKEN }} -Dsonar.qualitygate.wait=true
+      - name: Maven Build, SonarQube Scan & Quality Gate
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: ./mvnw clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.host.url=https://sonarcloud.io -Dsonar.qualitygate.wait=true -DskipTests -B
 
       - name: Docker Build
         run: docker build -t jfrog.liverpool.com.mx/lp-pedidos/app:dev-${{ github.sha }} .

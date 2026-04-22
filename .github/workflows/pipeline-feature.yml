@@ -6,15 +6,32 @@ on:
       - 'feature/*'
 
 jobs:
-  build-and-test:
+  quality-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Importante para que Sonar compare con la rama base
+
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'temurin'
-      # Fix: Se agrega -T 1C para optimizar el tiempo de compilación usando 1 hilo por core
+          cache: 'maven' # Agregamos cache para que sea más rápido tras la primera corrida
+
+      - name: Static Code Analysis (SonarQube)
+        # Solo ejecutamos el análisis si existen los secretos, 
+        # esto evita que el pipeline falle si aún no configuras el token en GitHub
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        run: |
+          mvn verify sonar:sonar \
+          -Dsonar.projectKey=lp-pedidos-gestion \
+          -Dsonar.qualitygate.wait=true \
+          -T 1C
+
       - name: Maven Build & Unit Tests
+        # Si el análisis de Sonar falla por el Quality Gate, este paso no se ejecutará
         run: mvn clean test -B -T 1C

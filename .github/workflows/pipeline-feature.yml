@@ -28,8 +28,8 @@ jobs:
     
         run: |
           mvn verify sonar:sonar \
-          -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} \
-          -Dsonar.organization=${{ secrets.SONAR_ORG }} \
+          -Dsonar.projectKey=Xoaq_spring-boot-actuator-demo \
+          -Dsonar.organization=xoaq \
           -Dsonar.host.url=https://sonarcloud.io \
           -Dsonar.qualitygate.wait=true \
           -T 1C

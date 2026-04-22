@@ -31,7 +31,7 @@ jobs:
       - name: Maven Build, SonarQube Scan & Quality Gate
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: ./mvnw clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.host.url=https://sonarcloud.io -Dsonar.qualitygate.wait=true -DskipTests -B
+        run: ./mvnw clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.host.url=https://sonarcloud.io -Dsonar.organization=xoaq -Dsonar.projectKey=Xoaq_spring-boot-actuator-demo -Dsonar.qualitygate.wait=true -DskipTests -B
 
       - name: Docker Build
         run: docker build -t jfrog.liverpool.com.mx/lp-pedidos/app:dev-${{ github.sha }} .

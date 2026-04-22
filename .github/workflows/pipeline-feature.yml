@@ -33,6 +33,8 @@ jobs:
         run: |
           ./mvnw verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
           -Dsonar.host.url=https://sonarcloud.io \
+          -Dsonar.organization=xoaq \
+          -Dsonar.projectKey=Xoaq_spring-boot-actuator-demo \
           -Dsonar.qualitygate.wait=true \
           -T 1C
 

@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - develop
-
 jobs:
   build-scan-push:
     runs-on: ubuntu-latest
@@ -42,3 +41,6 @@ jobs:
         run: |
           echo "${{ secrets.JFROG_TOKEN }}" | docker login jfrog.liverpool.com.mx -u ${{ secrets.JFROG_USER }} --password-stdin
           docker push jfrog.liverpool.com.mx/lp-pedidos/app:dev-${{ github.sha }}
+
+
+      #un comentario para modificar el archivo previo a la presentacion

@@ -41,4 +41,5 @@ jobs:
       - name: Maven Build & Unit Tests
         # Si el análisis de Sonar falla por el Quality Gate, este paso no se ejecutará
         #Actualizando  sonar token
+        # dando permisos... desde sonarcloud project permissions..
         run: mvn clean test -B -T 1C

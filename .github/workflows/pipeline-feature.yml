@@ -30,13 +30,11 @@ jobs:
       - name: Static Code Analysis (SonarQube)
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          ./mvnw verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-          -Dsonar.qualitygate.wait=true \
-          -T 1C -X
+        run: mvn verify sonar:sonar -Dsonar.qualitygate.wait=true
 
       - name: Maven Build & Unit Tests
         # Si el análisis de Sonar falla por el Quality Gate, este paso no se ejecutará
         #Actualizando  sonar token
         # dando permisos... desde sonarcloud project permissions..
+        # actualizando token en secrets de github
         run: mvn clean test -B -T 1C
